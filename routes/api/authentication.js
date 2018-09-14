@@ -1,8 +1,10 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
-const router = express.Router();
-
+const jwt = require("jsonwebtoken");
 const User = require("../../models/Auth");
+const secret = require("../../config/keys");
+
+const router = express.Router();
 
 // @route GET api/auth/test
 // @desc Tests the auth routes
@@ -33,6 +35,38 @@ router.post("/register", (request, response) => {
         });
       });
     }
+  });
+});
+
+// @route POST api/auth/login
+// @desc Returns token for valid credentials
+// @access Public
+router.post("/login", (request, response) => {
+  const email = request.body.email;
+  const password = request.body.password;
+
+  User.findOne({ email: email }).then(user => {
+    if (!user)
+      return response.status(404).json({ email: `No user with ${email}` });
+    bcrypt.compare(password, user.password).then(passwordMatches => {
+      if (passwordMatches) {
+        const userInfo = {
+          id: user.id,
+          name: user.name
+        };
+        jwt.sign(
+          userInfo,
+          secret.secret,
+          { expiresIn: 3600 },
+          (error, token) => {
+            response.json({
+              sucess: "Succesfully logged in",
+              token: `Bearer ${token}`
+            });
+          }
+        );
+      } else response.status(404).json({ password: "Invalid password" });
+    });
   });
 });
 
