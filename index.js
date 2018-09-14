@@ -1,6 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
+const passport = require("passport");
 
 const auth = require("./routes/api/authentication");
 
@@ -8,10 +9,6 @@ const profile = require("./routes/api/profile");
 const directory = require("./routes/api/directory");
 
 const app = express();
-
-// Middleware for body parser
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
 
 const db = require("./config/keys").mongoURI;
 
@@ -23,7 +20,13 @@ mongoose
   .then(() => console.log("connected"))
   .catch(error => console.log(error));
 
-app.get("/", (request, response) => response.send("I am Tinah"));
+// Middleware for body parser
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+//Middleware for passport
+app.use(passport.initialize());
+require("./config/passport")(passport);
 
 app.use("/api/auth", auth);
 // app.use("/api/profile", profile);
